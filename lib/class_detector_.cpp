@@ -9,27 +9,28 @@
 #include "calibrator.h"
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
-#define DEVICE 0  // GPU id
-#define NMS_THRESH 0.4
-#define CONF_THRESH 0.5
-#define BATCH_SIZE 1
+#define DEVICE (0)  // GPU id
 
 // stuff we know about the network and the input/output blobs
+static const float NMS_THRESH = 0.4; 
+static const float CONF_THRESH = 0.5; 
+static const int BATCH_SIZE = 1; 
 static const int INPUT_H = Yolo::INPUT_H;
 static const int INPUT_W = Yolo::INPUT_W;
 static const int CLASS_NUM = Yolo::CLASS_NUM;
 static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detection) / sizeof(float) + 1;  // we assume the yololayer outputs no more than MAX_OUTPUT_BBOX_COUNT boxes that conf >= 0.1
-const char* INPUT_BLOB_NAME = "data";
-const char* OUTPUT_BLOB_NAME = "prob";
+static const char* INPUT_BLOB_NAME = "data";
+static const char* OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
 
-static int get_width(int x, float gw, int divisor = 8) {
+int _Detector::get_width(int x, float gw, int divisor) 
+{
     //return math.ceil(x / divisor) * divisor
 
     return  int(ceil((x * gw) / divisor)) * divisor;
 }
 
-static int get_depth(int x, float gd) {
+int _Detector::get_depth(int x, float gd) {
     if (x == 1) {
         return 1;
     } else {
@@ -37,7 +38,7 @@ static int get_depth(int x, float gd) {
     }
 }
 
-static ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
+ICudaEngine* _Detector::build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
     INetworkDefinition* network = builder->createNetworkV2(0U);
 
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
@@ -127,7 +128,7 @@ static ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, I
     return engine;
 }
 
-static ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
+ICudaEngine* _Detector::build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
     INetworkDefinition* network = builder->createNetworkV2(0U);
 
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
@@ -232,7 +233,7 @@ static ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder
     return engine;
 }
 
-static void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p6, float& gd, float& gw, std::string& wts_name) {
+void _Detector::APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p6, float& gd, float& gw, std::string& wts_name) {
     // Create builder
     IBuilder* builder = createInferBuilder(gLogger);
     IBuilderConfig* config = builder->createBuilderConfig();
@@ -255,7 +256,7 @@ static void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, boo
     config->destroy();
 }
 
-static void doInference(IExecutionContext& context, cudaStream_t& stream, void **buffers, float* input, float* output, int batchSize) {
+void _Detector::doInference(IExecutionContext& context, cudaStream_t& stream, void **buffers, float* input, float* output, int batchSize) {
     // DMA input batch data to device, infer on the batch asynchronously, and DMA output back to host
     CUDA_CHECK(cudaMemcpyAsync(buffers[0], input, batchSize * 3 * INPUT_H * INPUT_W * sizeof(float), cudaMemcpyHostToDevice, stream));
     context.enqueue(batchSize, buffers, stream, nullptr);

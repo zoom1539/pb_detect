@@ -1,3 +1,9 @@
 build
 *.engine
 *.wts
+data/0.jpg
+data/1.jpg
+data/2.jpg
+data/3.jpg
+data/4.jpg
+data/5.jpg
