@@ -12,7 +12,20 @@ int main()
     Detector detector;
 
     //
-    std::string engine_path = "../lib/extra/yolov5s.engine";
+    std::string wts_path = "../yolov5s.wts";
+    std::string engine_path = "../lib/extra/yolov5s_fp16_b1.engine";
+#if 0
+    bool is_serialize = detector.serialize(wts_path, engine_path);
+    if(!is_serialize)
+    {
+        std::cout << "init fail\n";
+        return 0;
+    }
+
+    return 1;
+
+
+#else
     bool is_init = detector.init(engine_path);
     if(!is_init)
     {
@@ -76,6 +89,7 @@ int main()
         ss <<"../data/" << i << ".jpg";
         cv::imwrite(ss.str(), imgs[i]);
     }
+#endif
     
     std::cin.get();
     return 0;

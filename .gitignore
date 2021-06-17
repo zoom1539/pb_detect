@@ -1,2 +1,3 @@
 build
-lib/extra/yolov5s.engine
+*.engine
+*.wts

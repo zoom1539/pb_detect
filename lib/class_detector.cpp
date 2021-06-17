@@ -17,6 +17,11 @@ Detector::~Detector()
     _impl = NULL;
 }
 
+bool Detector::serialize(std::string &wts_path_, const std::string &engine_path_)
+{
+    return _impl->_detector.serialize(wts_path_, engine_path_);
+}
+
 bool Detector::init(const std::string &engine_path_)
 {
     return _impl->_detector.init(engine_path_);
