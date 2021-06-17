@@ -23,14 +23,14 @@ static const char* INPUT_BLOB_NAME = "data";
 static const char* OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
 
-int _Detector::get_width(int x, float gw, int divisor) 
+static int get_width(int x, float gw, int divisor=8) 
 {
     //return math.ceil(x / divisor) * divisor
 
     return  int(ceil((x * gw) / divisor)) * divisor;
 }
 
-int _Detector::get_depth(int x, float gd) {
+static int get_depth(int x, float gd) {
     if (x == 1) {
         return 1;
     } else {
@@ -38,7 +38,7 @@ int _Detector::get_depth(int x, float gd) {
     }
 }
 
-ICudaEngine* _Detector::build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
+static ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
     INetworkDefinition* network = builder->createNetworkV2(0U);
 
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
@@ -128,7 +128,7 @@ ICudaEngine* _Detector::build_engine(unsigned int maxBatchSize, IBuilder* builde
     return engine;
 }
 
-ICudaEngine* _Detector::build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
+static ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
     INetworkDefinition* network = builder->createNetworkV2(0U);
 
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
@@ -233,7 +233,7 @@ ICudaEngine* _Detector::build_engine_p6(unsigned int maxBatchSize, IBuilder* bui
     return engine;
 }
 
-void _Detector::APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p6, float& gd, float& gw, std::string& wts_name) {
+static void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p6, float& gd, float& gw, std::string& wts_name) {
     // Create builder
     IBuilder* builder = createInferBuilder(gLogger);
     IBuilderConfig* config = builder->createBuilderConfig();
@@ -256,7 +256,7 @@ void _Detector::APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream,
     config->destroy();
 }
 
-void _Detector::doInference(IExecutionContext& context, cudaStream_t& stream, void **buffers, float* input, float* output, int batchSize) {
+static void doInference(IExecutionContext& context, cudaStream_t& stream, void **buffers, float* input, float* output, int batchSize) {
     // DMA input batch data to device, infer on the batch asynchronously, and DMA output back to host
     CUDA_CHECK(cudaMemcpyAsync(buffers[0], input, batchSize * 3 * INPUT_H * INPUT_W * sizeof(float), cudaMemcpyHostToDevice, stream));
     context.enqueue(batchSize, buffers, stream, nullptr);
