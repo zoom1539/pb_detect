@@ -17,7 +17,7 @@ static const float CONF_THRESH = 0.5;
 static const int BATCH_SIZE = 1; 
 static const int INPUT_H = Yolo::INPUT_H;
 static const int INPUT_W = Yolo::INPUT_W;
-static const int CLASS_NUM = Yolo::CLASS_NUM;
+// static const int CLASS_NUM = Yolo::CLASS_NUM;
 static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detection) / sizeof(float) + 1;  // we assume the yololayer outputs no more than MAX_OUTPUT_BBOX_COUNT boxes that conf >= 0.1
 static const char* INPUT_BLOB_NAME = "data";
 static const char* OUTPUT_BLOB_NAME = "prob";
@@ -38,7 +38,7 @@ static int get_depth(int x, float gd) {
     }
 }
 
-static ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
+static ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name, int class_num_) {
     INetworkDefinition* network = builder->createNetworkV2(0U);
 
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
@@ -83,19 +83,19 @@ static ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, I
     auto bottleneck_csp17 = C3(network, weightMap, *cat16->getOutput(0), get_width(512, gw), get_width(256, gw), get_depth(3, gd), false, 1, 0.5, "model.17");
 
     /* ------ detect ------ */
-    IConvolutionLayer* det0 = network->addConvolutionNd(*bottleneck_csp17->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.0.weight"], weightMap["model.24.m.0.bias"]);
+    IConvolutionLayer* det0 = network->addConvolutionNd(*bottleneck_csp17->getOutput(0), 3 * (class_num_ + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.0.weight"], weightMap["model.24.m.0.bias"]);
     auto conv18 = convBlock(network, weightMap, *bottleneck_csp17->getOutput(0), get_width(256, gw), 3, 2, 1, "model.18");
     ITensor* inputTensors19[] = { conv18->getOutput(0), conv14->getOutput(0) };
     auto cat19 = network->addConcatenation(inputTensors19, 2);
     auto bottleneck_csp20 = C3(network, weightMap, *cat19->getOutput(0), get_width(512, gw), get_width(512, gw), get_depth(3, gd), false, 1, 0.5, "model.20");
-    IConvolutionLayer* det1 = network->addConvolutionNd(*bottleneck_csp20->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.1.weight"], weightMap["model.24.m.1.bias"]);
+    IConvolutionLayer* det1 = network->addConvolutionNd(*bottleneck_csp20->getOutput(0), 3 * (class_num_ + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.1.weight"], weightMap["model.24.m.1.bias"]);
     auto conv21 = convBlock(network, weightMap, *bottleneck_csp20->getOutput(0), get_width(512, gw), 3, 2, 1, "model.21");
     ITensor* inputTensors22[] = { conv21->getOutput(0), conv10->getOutput(0) };
     auto cat22 = network->addConcatenation(inputTensors22, 2);
     auto bottleneck_csp23 = C3(network, weightMap, *cat22->getOutput(0), get_width(1024, gw), get_width(1024, gw), get_depth(3, gd), false, 1, 0.5, "model.23");
-    IConvolutionLayer* det2 = network->addConvolutionNd(*bottleneck_csp23->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.2.weight"], weightMap["model.24.m.2.bias"]);
+    IConvolutionLayer* det2 = network->addConvolutionNd(*bottleneck_csp23->getOutput(0), 3 * (class_num_ + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.2.weight"], weightMap["model.24.m.2.bias"]);
 
-    auto yolo = addYoLoLayer(network, weightMap, "model.24", std::vector<IConvolutionLayer*>{det0, det1, det2});
+    auto yolo = addYoLoLayer(network, weightMap, "model.24", std::vector<IConvolutionLayer*>{det0, det1, det2}, class_num_);
     yolo->getOutput(0)->setName(OUTPUT_BLOB_NAME);
     network->markOutput(*yolo->getOutput(0));
 
@@ -128,7 +128,7 @@ static ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, I
     return engine;
 }
 
-static ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
+static ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name, int class_num_) {
     INetworkDefinition* network = builder->createNetworkV2(0U);
 
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
@@ -195,12 +195,12 @@ static ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder
     auto c3_32 = C3(network, weightMap, *cat31->getOutput(0), get_width(2048, gw), get_width(1024, gw), get_depth(3, gd), false, 1, 0.5, "model.32");
 
     /* ------ detect ------ */
-    IConvolutionLayer* det0 = network->addConvolutionNd(*c3_23->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.0.weight"], weightMap["model.33.m.0.bias"]);
-    IConvolutionLayer* det1 = network->addConvolutionNd(*c3_26->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.1.weight"], weightMap["model.33.m.1.bias"]);
-    IConvolutionLayer* det2 = network->addConvolutionNd(*c3_29->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.2.weight"], weightMap["model.33.m.2.bias"]);
-    IConvolutionLayer* det3 = network->addConvolutionNd(*c3_32->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.3.weight"], weightMap["model.33.m.3.bias"]);
+    IConvolutionLayer* det0 = network->addConvolutionNd(*c3_23->getOutput(0), 3 * (class_num_ + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.0.weight"], weightMap["model.33.m.0.bias"]);
+    IConvolutionLayer* det1 = network->addConvolutionNd(*c3_26->getOutput(0), 3 * (class_num_ + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.1.weight"], weightMap["model.33.m.1.bias"]);
+    IConvolutionLayer* det2 = network->addConvolutionNd(*c3_29->getOutput(0), 3 * (class_num_ + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.2.weight"], weightMap["model.33.m.2.bias"]);
+    IConvolutionLayer* det3 = network->addConvolutionNd(*c3_32->getOutput(0), 3 * (class_num_ + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.3.weight"], weightMap["model.33.m.3.bias"]);
 
-    auto yolo = addYoLoLayer(network, weightMap, "model.33", std::vector<IConvolutionLayer*>{det0, det1, det2, det3});
+    auto yolo = addYoLoLayer(network, weightMap, "model.33", std::vector<IConvolutionLayer*>{det0, det1, det2, det3}, class_num_);
     yolo->getOutput(0)->setName(OUTPUT_BLOB_NAME);
     network->markOutput(*yolo->getOutput(0));
 
@@ -233,7 +233,7 @@ static ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder
     return engine;
 }
 
-static void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p6, float& gd, float& gw, std::string& wts_name) {
+static void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p6, float& gd, float& gw, std::string& wts_name, int class_num_) {
     // Create builder
     IBuilder* builder = createInferBuilder(gLogger);
     IBuilderConfig* config = builder->createBuilderConfig();
@@ -241,9 +241,9 @@ static void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, boo
     // Create model to populate the network, then set the outputs and create an engine
     ICudaEngine *engine = nullptr;
     if (is_p6) {
-        engine = build_engine_p6(maxBatchSize, builder, config, DataType::kFLOAT, gd, gw, wts_name);
+        engine = build_engine_p6(maxBatchSize, builder, config, DataType::kFLOAT, gd, gw, wts_name, class_num_);
     } else {
-        engine = build_engine(maxBatchSize, builder, config, DataType::kFLOAT, gd, gw, wts_name);
+        engine = build_engine(maxBatchSize, builder, config, DataType::kFLOAT, gd, gw, wts_name, class_num_);
     }
     assert(engine != nullptr);
 
@@ -292,13 +292,15 @@ _Detector::~_Detector()
     }
 }
 
-bool _Detector::serialize(std::string &wts_path_, const std::string &engine_path_)
+bool _Detector::serialize(std::string &wts_path_, const std::string &engine_path_, int class_num_)
 {
+    _class_num = class_num_;
+    
     IHostMemory* modelStream{ nullptr };
     
     bool is_p6 = false;
     float gd = 0.33f, gw = 0.5f;
-    APIToModel(BATCH_SIZE, &modelStream, is_p6, gd, gw, wts_path_);
+    APIToModel(BATCH_SIZE, &modelStream, is_p6, gd, gw, wts_path_, _class_num);
     assert(modelStream != nullptr);
     std::ofstream p(engine_path_, std::ios::binary);
     if (!p) {

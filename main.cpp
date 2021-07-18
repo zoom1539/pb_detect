@@ -14,8 +14,9 @@ int main()
     //
     std::string wts_path = "../yolov5s.wts";
     std::string engine_path = "../lib/extra/yolov5s_fp16_b1.engine";
+    int class_num = 80;
 #if 0
-    bool is_serialize = detector.serialize(wts_path, engine_path);
+    bool is_serialize = detector.serialize(wts_path, engine_path, class_num);
     if(!is_serialize)
     {
         std::cout << "init fail\n";
@@ -36,7 +37,7 @@ int main()
     //
     std::vector<cv::Mat> imgs;
     {
-        cv::Mat img = cv::imread("../data/bus.jpg");
+        cv::Mat img = cv::imread("../data/phone.jpg");
         imgs.push_back(img);
     }
     {

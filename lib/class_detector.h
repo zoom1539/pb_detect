@@ -15,7 +15,7 @@ public:
     explicit Detector();
     ~Detector();
 
-    bool serialize(std::string &wts_path_, const std::string &engine_path_);
+    bool serialize(std::string &wts_path_, const std::string &engine_path_, int class_num_);
 
     bool init(const std::string &engine_path_);
 

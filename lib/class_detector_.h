@@ -15,7 +15,7 @@ public:
     ~_Detector();
 
 public:
-    bool serialize(std::string &wts_path_, const std::string &engine_path_);
+    bool serialize(std::string &wts_path_, const std::string &engine_path_, int class_num_);
     
     bool init(const std::string &engine_path_);
 
@@ -36,4 +36,6 @@ private:
     cudaStream_t _stream;
 
     void* _buffers[2] = {nullptr};
+
+    int _class_num;
 };
