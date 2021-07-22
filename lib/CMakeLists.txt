@@ -9,14 +9,23 @@ link_directories(/usr/local/cuda/lib64)
 
 
 # OpenCV
-find_package(OpenCV 3.4.15 REQUIRED PATHS /root/PLATFORM/3rdparty/opencv3415)
-# find_package(OpenCV REQUIRED)
+if(EV_DOCKER)
+    find_package(OpenCV REQUIRED)
+else()
+    find_package(OpenCV 3.4.15 REQUIRED PATHS /root/PLATFORM/3rdparty/opencv3415)
+endif()
 
 
 # TensorRT
-set(TENSORRT_ROOT /root/PLATFORM/3rdparty/TensorRT-7.0.0.11)
-set(TENSORRT_INCLUDE_DIR ${TENSORRT_ROOT}/include)
-set(TENSORRT_LIB_DIR ${TENSORRT_ROOT}/lib)
+if(EV_DOCKER)
+    set(TENSORRT_INCLUDE_DIR /usr/include/x86_64-linux-gnu/)
+    set(TENSORRT_LIB_DIR /usr/lib/x86_64-linux-gnu/)
+else()
+    set(TENSORRT_ROOT /root/PLATFORM/3rdparty/TensorRT-7.0.0.11)
+    set(TENSORRT_INCLUDE_DIR ${TENSORRT_ROOT}/include)
+    set(TENSORRT_LIB_DIR ${TENSORRT_ROOT}/lib)
+endif()
+
 
 
 #
@@ -40,4 +49,4 @@ target_link_libraries(detector ${OpenCV_LIBS}
 # make install
 install(FILES class_detector.h DESTINATION include)
 install(TARGETS detector LIBRARY DESTINATION lib)
-install(FILES extra/yolov5s_fp16_b1.engine DESTINATION lib)
+#install(FILES extra/yolov5s_fp16_b1.engine DESTINATION lib)

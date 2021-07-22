@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(demo VERSION 0.1.0)
 
+option(EV_DOCKER "This is a option for EV_DOCKER" ON)
+
 #
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -18,8 +20,11 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_INSTALL_PREFIX install)
 
 # OpenCV
-find_package(OpenCV 3.4.15 REQUIRED PATHS ~/PLATFORM/3rdparty/opencv3415)
-# find_package(OpenCV REQUIRED)
+if(EV_DOCKER)
+    find_package(OpenCV REQUIRED)
+else()
+    find_package(OpenCV 3.4.15 REQUIRED PATHS /root/PLATFORM/3rdparty/opencv3415)
+endif()
 
 #
 add_subdirectory(lib)
