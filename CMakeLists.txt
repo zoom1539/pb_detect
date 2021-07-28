@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(demo VERSION 0.1.0)
 
-option(EV_DOCKER "This is a option for EV_DOCKER" ON)
+option(EV_DOCKER "This is a option for EV_DOCKER" OFF)
 
 #
 include(CheckCXXCompilerFlag)
@@ -24,6 +24,7 @@ if(EV_DOCKER)
     find_package(OpenCV REQUIRED)
 else()
     find_package(OpenCV 3.4.15 REQUIRED PATHS /root/PLATFORM/3rdparty/opencv3415)
+    message(${OpenCV_INCLUDE_DIRS})
 endif()
 
 #

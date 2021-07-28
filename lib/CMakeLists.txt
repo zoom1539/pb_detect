@@ -49,4 +49,4 @@ target_link_libraries(detector ${OpenCV_LIBS}
 # make install
 install(FILES class_detector.h DESTINATION include)
 install(TARGETS detector LIBRARY DESTINATION lib)
-#install(FILES extra/yolov5s_fp16_b1.engine DESTINATION lib)
+install(FILES extra/yolov5s.wts DESTINATION lib)
