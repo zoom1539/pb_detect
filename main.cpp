@@ -83,7 +83,8 @@ int main()
         for (int j = 0; j < detections.size(); j++)
         {
             cv::rectangle(imgs[i], detections[j].rect, cv::Scalar(0x27, 0xC1, 0x36), 2);
-            cv::putText(imgs[i], std::to_string((int)detections[j].class_id), cv::Point(detections[j].rect.x, detections[j].rect.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            cv::putText(imgs[i], std::to_string((int)detections[j].class_id) + " " + std::to_string(detections[j].conf), 
+                        cv::Point(detections[j].rect.x, detections[j].rect.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
         }
 
         std::stringstream ss;
