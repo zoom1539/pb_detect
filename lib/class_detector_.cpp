@@ -294,6 +294,7 @@ _Detector::~_Detector()
 
 bool _Detector::serialize(std::string &wts_path_, const std::string &engine_path_, int class_num_)
 {
+	
     _class_num = class_num_;
     
     IHostMemory* modelStream{ nullptr };
@@ -301,12 +302,14 @@ bool _Detector::serialize(std::string &wts_path_, const std::string &engine_path
     bool is_p6 = false;
     float gd = 0.33f, gw = 0.5f;
     APIToModel(BATCH_SIZE, &modelStream, is_p6, gd, gw, wts_path_, _class_num);
+
     assert(modelStream != nullptr);
     std::ofstream p(engine_path_, std::ios::binary);
     if (!p) {
         std::cerr << "could not open plan output file" << std::endl;
         return -1;
     }
+
     p.write(reinterpret_cast<const char*>(modelStream->data()), modelStream->size());
     modelStream->destroy();
     return true;
