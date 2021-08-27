@@ -317,6 +317,7 @@ bool _Detector::serialize(std::string &wts_path_, const std::string &engine_path
 
 bool _Detector::init(const std::string &engine_path_)
 {
+    
     cudaSetDevice(DEVICE);
 
     std::ifstream file(engine_path_, std::ios::binary);
@@ -343,7 +344,7 @@ bool _Detector::init(const std::string &engine_path_)
     assert(_context != nullptr);
     delete[] trtModelStream;
     assert(_engine->getNbBindings() == 2);
-    
+
     // In order to bind the buffers, we need to know the names of the input and output tensors.
     // Note that indices are guaranteed to be less than IEngine::getNbBindings()
     const int inputIndex = _engine->getBindingIndex(INPUT_BLOB_NAME);
